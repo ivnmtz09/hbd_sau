@@ -17,6 +17,7 @@ export default {
                 'float': 'float 6s ease-in-out infinite',
                 'spin-slow': 'spin 8s linear infinite',
                 'shimmer': 'shimmer 2s linear infinite',
+                'scale-in': 'scaleIn 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards',
             },
             keyframes: {
                 fadeIn: {
@@ -34,6 +35,10 @@ export default {
                 shimmer: {
                     '0%': { backgroundPosition: '-200% 0' },
                     '100%': { backgroundPosition: '200% 0' },
+                },
+                scaleIn: {
+                    '0%': { opacity: '0', transform: 'scale(0.9)' },
+                    '100%': { opacity: '1', transform: 'scale(1)' },
                 }
             },
             colors: {

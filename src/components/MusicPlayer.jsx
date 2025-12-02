@@ -56,7 +56,10 @@ const MusicPlayer = ({ startPlaying }) => {
                 videoId: initialId,
                 playerVars: { 'autoplay': 0, 'controls': 0 },
                 events: {
-                    'onReady': (e) => setPlayer(e.target),
+                    'onReady': (e) => {
+                        console.log("YouTube Player listo");
+                        setPlayer(e.target);
+                    },
                     'onStateChange': (e) => {
                         if (e.data === 0) playNext();
                     }
@@ -67,11 +70,14 @@ const MusicPlayer = ({ startPlaying }) => {
 
     // 3. INICIAR CUANDO SE DA CLICK EN HOME SCREEN
     useEffect(() => {
+        console.log("MusicPlayer - startPlaying:", startPlaying, "player:", !!player, "playlist length:", playlist.length);
         if (startPlaying && player && playlist.length > 0) {
+            console.log("Intentando reproducir música automáticamente...");
             player.loadVideoById(playlist[0].id);
             setTimeout(() => {
                 player.playVideo();
                 setIsPlaying(true);
+                console.log("Música iniciada automáticamente");
             }, 500);
         }
     }, [startPlaying, player, playlist]);

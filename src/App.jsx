@@ -110,24 +110,43 @@ function App() {
           )}
 
           {videoPlaying && !showPopup && (
-            <div className="relative z-10 w-full flex items-center justify-center animate-fade-in px-2 md:px-0">
+            <div className="relative z-10 w-full flex flex-col items-center justify-center animate-fade-in px-2 md:px-0">
               <video
                 ref={videoRef}
                 src="/fotos/the-rock-hbd.mp4"
                 playsInline
                 className="
-                  w-auto h-auto
-                  max-w-full md:max-w-5xl
-                  max-h-[80vh]
-                  aspect-video
+                  w-auto 
+                  h-auto
+                  max-w-full 
+                  max-h-[75vh]
                   object-contain
                   rounded-xl md:rounded-3xl
                   shadow-2xl
                   border-2 md:border-4 border-white/10
                   bg-black
+                  mb-6
                 "
                 onEnded={handleVideoEnd}
               />
+
+              <button
+                onClick={handleVideoEnd}
+                className="
+                  flex items-center gap-2 
+                  px-6 py-3 
+                  bg-white/10 hover:bg-white/20 
+                  backdrop-blur-md 
+                  border border-white/10 
+                  rounded-full 
+                  text-white text-sm font-medium 
+                  transition-all duration-300 
+                  hover:scale-105
+                "
+              >
+                <SkipForward size={16} />
+                Saltar a la Roca
+              </button>
             </div>
           )}
 

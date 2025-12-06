@@ -3,15 +3,15 @@ import { Image as ImageIcon, RefreshCw, Video, Play } from 'lucide-react';
 
 // --- TU BASE DE DATOS DE RECUERDOS ---
 const ALL_MEMORIES = [
-    // FOTOS (type: 'image') - IDs 1 a 187
-    ...Array.from({ length: 187 }, (_, i) => ({
+    // FOTOS (type: 'image') - IDs 1 a 192
+    ...Array.from({ length: 192 }, (_, i) => ({
         id: i + 1,
         type: 'image',
         url: `/fotos/foto_ (${i + 1}).jpg`
     })),
-    // VIDEOS (type: 'video') - IDs 188 a 216
-    ...Array.from({ length: 29 }, (_, i) => ({
-        id: 187 + i + 1,
+    // VIDEOS (type: 'video') - IDs 193 a 222
+    ...Array.from({ length: 30 }, (_, i) => ({
+        id: 192 + i + 1,
         type: 'video',
         url: `/fotos/video_ (${i + 1}).mp4`
     }))
@@ -28,8 +28,8 @@ const PhotoGallery = () => {
             const j = Math.floor(Math.random() * (i + 1));
             [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
         }
-        // CAMBIO 1: Ahora mostramos 20 elementos en lugar de 10
-        setDisplayedItems(shuffled.slice(0, 20));
+        // CAMBIO: Ahora mostramos 30 elementos
+        setDisplayedItems(shuffled.slice(0, 30));
     };
 
     const handleRefresh = () => {
@@ -40,14 +40,7 @@ const PhotoGallery = () => {
     useEffect(() => {
         // Carga inicial
         shuffleMemories();
-
-        // CAMBIO 2: Actualización automática cada 2 minutos (120,000 ms)
-        const intervalId = setInterval(() => {
-            shuffleMemories();
-        }, 120000);
-
-        // Limpieza del intervalo cuando se sale de la galería
-        return () => clearInterval(intervalId);
+        // Se eliminó el intervalo de actualización automática
     }, []);
 
     return (

@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
-import { Play, Pause, SkipForward, Disc } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Play, Pause, SkipForward, Disc, Music, ChevronUp, ChevronDown } from 'lucide-react';
+import { audioBridge } from '../utils/audioBridge';
 
 const ORIGINAL_PLAYLIST = [
     { title: "One Way Or Another", artist: "One Direction", id: "36mCEZzzQ3o" },
@@ -51,22 +52,26 @@ const ORIGINAL_PLAYLIST = [
 
 const MusicPlayer = ({ startPlaying }) => {
     const [isPlaying, setIsPlaying] = useState(false);
-    const [playlist, setPlaylist] = useState([]);
-    const [currentIndex, setCurrentIndex] = useState(0);
-    const [player, setPlayer] = useState(null);
-    const [showPlaylist, setShowPlaylist] = useState(false);
-
-    // 1. MEZCLAR LISTA AL CARGAR
-    useEffect(() => {
+    const [playlist] = useState(() => {
         const shuffled = [...ORIGINAL_PLAYLIST];
         for (let i = shuffled.length - 1; i > 0; i--) {
             const j = Math.floor(Math.random() * (i + 1));
             [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
         }
-        setPlaylist(shuffled);
-    }, []);
+        return shuffled;
+    });
+    const [currentIndex, setCurrentIndex] = useState(0);
+    const [player, setPlayer] = useState(null);
+    const [showPlaylist, setShowPlaylist] = useState(false);
+    const playerRef = useRef(null);
+    const isPlayingRef = useRef(false);
+    const playNextRef = useRef(null);
 
-    // 2. INICIALIZAR YOUTUBE
+    useEffect(() => {
+        isPlayingRef.current = isPlaying;
+    }, [isPlaying]);
+
+    // 1. INICIALIZAR YOUTUBE
     useEffect(() => {
         if (!window.YT) {
             const tag = document.createElement('script');
@@ -84,35 +89,56 @@ const MusicPlayer = ({ startPlaying }) => {
                 playerVars: { 'autoplay': 0, 'controls': 0 },
                 events: {
                     'onReady': (e) => {
-                        console.log("YouTube Player listo");
                         setPlayer(e.target);
+                        playerRef.current = e.target;
                     },
                     'onStateChange': (e) => {
-                        if (e.data === 0) playNext();
+                        if (e.data === 0 && playNextRef.current) {
+                            playNextRef.current();
+                        }
                     }
                 }
             });
         };
     }, []);
 
-    // 3. INICIAR CUANDO SE DA CLICK EN HOME SCREEN
+    // 3. SUSCRIPCIÓN AL PUENTE DE AUDIO (Para pausar cuando se reproduzca un video)
     useEffect(() => {
-        console.log("MusicPlayer - startPlaying:", startPlaying, "player:", !!player, "playlist length:", playlist.length);
+        const unsubscribe = audioBridge.subscribe((shouldPause) => {
+            if (!playerRef.current) return;
+            if (shouldPause) {
+                if (isPlayingRef.current) {
+                    playerRef.current.pauseVideo();
+                    setIsPlaying(false);
+                }
+            } else {
+                playerRef.current.playVideo();
+                setIsPlaying(true);
+            }
+        });
+        return () => unsubscribe();
+    }, []);
+
+    // 4. INICIAR CUANDO SE DA CLICK EN HOME SCREEN
+    useEffect(() => {
         if (startPlaying && player && playlist.length > 0) {
-            console.log("Intentando reproducir música automáticamente...");
             player.loadVideoById(playlist[0].id);
             setTimeout(() => {
                 player.playVideo();
                 setIsPlaying(true);
-                console.log("Música iniciada automáticamente");
             }, 500);
         }
     }, [startPlaying, player, playlist]);
 
     const togglePlay = () => {
         if (!player) return;
-        isPlaying ? player.pauseVideo() : player.playVideo();
-        setIsPlaying(!isPlaying);
+        if (isPlaying) {
+            player.pauseVideo();
+            setIsPlaying(false);
+        } else {
+            player.playVideo();
+            setIsPlaying(true);
+        }
     };
 
     const playNext = () => {
@@ -122,6 +148,10 @@ const MusicPlayer = ({ startPlaying }) => {
         player.loadVideoById(playlist[next].id);
         setIsPlaying(true);
     };
+
+    useEffect(() => {
+        playNextRef.current = playNext;
+    });
 
     const handleSelectSong = (index) => {
         setCurrentIndex(index);
@@ -140,61 +170,68 @@ const MusicPlayer = ({ startPlaying }) => {
 
     return (
         <>
-            {/* LISTA DE REPRODUCCIÓN DESPLEGABLE */}
-            <div className={`fixed bottom-24 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-slate-900/90 backdrop-blur-xl border border-white/10 rounded-2xl overflow-hidden z-40 transition-all duration-300 origin-bottom shadow-2xl ${showPlaylist ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none translate-y-4'}`}>
-                <div className="p-4 border-b border-white/5 bg-white/5 flex justify-between items-center">
-                    <h3 className="text-white font-bold text-sm">Lista de Reproducción</h3>
-                    <span className="text-xs text-indigo-300">{playlist.length} canciones</span>
+            {/* LISTA DE REPRODUCCIÓN DESPLEGABLE CLAYMORPHIC */}
+            <div className={`fixed bottom-24 left-1/2 -translate-x-1/2 w-[92%] max-w-md bg-slate-900/90 backdrop-blur-2xl border border-white/20 rounded-3xl overflow-hidden z-40 transition-all duration-300 origin-bottom shadow-clay-card ${showPlaylist ? 'scale-100 opacity-100' : 'scale-95 opacity-0 pointer-events-none translate-y-4'}`}>
+                <div className="p-4 border-b border-white/10 bg-slate-950/70 flex justify-between items-center">
+                    <div className="flex items-center gap-2">
+                        <span className="w-2.5 h-2.5 rounded-full bg-pink-400 animate-pulse"></span>
+                        <h3 className="text-white font-black text-sm tracking-tight">Soundtrack de Saudí</h3>
+                    </div>
+                    <span className="text-xs font-mono font-bold text-yellow-300 bg-yellow-400/10 px-2.5 py-0.5 rounded-full shadow-clay-badge border border-yellow-400/20">
+                        {playlist.length} tracks
+                    </span>
                 </div>
-                <div className="max-h-60 overflow-y-auto p-2 space-y-1 custom-scrollbar">
+
+                <div className="max-h-64 overflow-y-auto p-2 space-y-1.5 custom-scrollbar bg-slate-900/95">
                     {playlist.map((song, index) => (
                         <button
                             key={index}
                             onClick={() => handleSelectSong(index)}
-                            className={`w-full flex items-center gap-3 p-2 rounded-lg transition-colors text-left ${index === currentIndex ? 'bg-indigo-500/20 border border-indigo-500/30' : 'hover:bg-white/5 border border-transparent'}`}
+                            className={`w-full flex items-center gap-3 p-2.5 rounded-2xl transition-all text-left border ${
+                                index === currentIndex 
+                                    ? 'bg-indigo-950/60 border-indigo-400/70 shadow-clay-badge text-white' 
+                                    : 'bg-slate-950/40 border-white/5 hover:border-white/15'
+                            }`}
                         >
-                            <div className="w-8 h-8 rounded bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden">
+                            <div className="w-9 h-9 rounded-xl bg-slate-800 flex items-center justify-center shrink-0 overflow-hidden border border-white/10">
                                 <img
                                     src={`https://img.youtube.com/vi/${song.id}/mqdefault.jpg`}
                                     alt=""
-                                    className="w-full h-full object-cover opacity-80"
+                                    className="w-full h-full object-cover"
                                 />
                             </div>
                             <div className="min-w-0 flex-1">
-                                <p className={`text-sm font-medium truncate ${index === currentIndex ? 'text-indigo-300' : 'text-slate-200'}`}>
+                                <p className={`text-xs font-black truncate ${index === currentIndex ? 'text-pink-300' : 'text-slate-200'}`}>
                                     {song.title}
                                 </p>
-                                <p className="text-xs text-slate-500 truncate">
+                                <p className="text-[11px] text-slate-400 truncate">
                                     {song.artist}
                                 </p>
                             </div>
                             {index === currentIndex && (
-                                <div className="w-2 h-2 rounded-full bg-indigo-400 animate-pulse shrink-0" />
+                                <div className="w-2 h-2 rounded-full bg-pink-400 animate-pulse shrink-0" />
                             )}
                         </button>
                     ))}
                 </div>
             </div>
 
-            {/* REPRODUCTOR FLOTANTE */}
-            <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-black/80 backdrop-blur-2xl border border-white/10 rounded-full p-3 pr-6 z-50 shadow-2xl shadow-black/50 ring-1 ring-white/5 transition-all duration-700 cubic-bezier(0.16, 1, 0.3, 1) hover:scale-105 ${startPlaying ? 'translate-y-0 opacity-100' : 'translate-y-[200%] opacity-0'}`}>
+            {/* REPRODUCTOR FLOTANTE CLAYMORPHIC */}
+            <div className={`fixed bottom-6 left-1/2 -translate-x-1/2 w-[92%] max-w-md bg-slate-900/90 backdrop-blur-2xl border border-white/20 rounded-full p-2.5 pr-5 z-35 shadow-clay-header transition-all duration-500 hover:scale-[1.02] ${startPlaying ? 'translate-y-0 opacity-100' : 'translate-y-[200%] opacity-0'}`}>
                 <div id="yt-player-hidden" className="hidden"></div>
 
-                <div className="flex items-center justify-between gap-4">
+                <div className="flex items-center justify-between gap-3">
                     <div
-                        className="flex items-center gap-4 overflow-hidden flex-1 min-w-0 cursor-pointer group"
+                        className="flex items-center gap-3.5 overflow-hidden flex-1 min-w-0 cursor-pointer group select-none"
                         onClick={() => setShowPlaylist(!showPlaylist)}
+                        title="Ver lista de canciones"
                     >
-
-                        {/* CÍRCULO CON EFECTO VINILO (PORTADA REAL) */}
+                        {/* CÍRCULO CON EFECTO VINILO CLAY */}
                         <div
-                            className={`relative w-14 h-14 flex-shrink-0 rounded-full overflow-hidden border-2 border-white/10 shadow-lg ${isPlaying ? 'ring-2 ring-indigo-500/50' : ''}`}
+                            className={`relative w-12 h-12 flex-shrink-0 rounded-full overflow-hidden border-2 border-white/40 shadow-clay-badge ${isPlaying ? 'ring-2 ring-pink-400/80' : ''}`}
                             style={{ WebkitMaskImage: '-webkit-radial-gradient(white, black)' }}
                         >
-                            {/* 1. CONTENEDOR QUE GIRA (Spin) */}
                             <div className={`w-full h-full flex items-center justify-center ${isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''}`}>
-
-                                {/* 2. IMAGEN QUE HACE ZOOM (Scale) */}
                                 {thumbnailUrl ? (
                                     <img
                                         src={thumbnailUrl}
@@ -207,16 +244,20 @@ const MusicPlayer = ({ startPlaying }) => {
                                     </div>
                                 )}
                             </div>
-
                             {/* Agujero central del vinilo */}
-                            <div className="absolute inset-0 m-auto w-3 h-3 bg-black/80 rounded-full border border-white/20 z-10"></div>
+                            <div className="absolute inset-0 m-auto w-2.5 h-2.5 bg-black rounded-full border border-white/40 z-10"></div>
                         </div>
 
-                        <div className="flex flex-col min-w-0 flex-1 group-hover:opacity-80 transition-opacity">
-                            <span className="text-sm font-bold text-white truncate">{playlist[currentIndex]?.title}</span>
-                            <span className="text-xs text-indigo-200/60 truncate flex items-center gap-1">
-                                {playlist[currentIndex]?.artist}
-                                <span className="text-[10px] opacity-50">• Ver lista</span>
+                        <div className="flex flex-col min-w-0 flex-1">
+                            <span className="text-xs sm:text-sm font-black text-white truncate group-hover:text-pink-300 transition-colors">
+                                {playlist[currentIndex]?.title}
+                            </span>
+                            <span className="text-[11px] text-slate-400 truncate flex items-center gap-1.5 font-medium">
+                                <span>{playlist[currentIndex]?.artist}</span>
+                                <span className="text-[10px] text-indigo-300 font-mono font-bold flex items-center gap-0.5">
+                                    {showPlaylist ? <ChevronDown size={10} /> : <ChevronUp size={10} />}
+                                    Tracks
+                                </span>
                             </span>
                         </div>
                     </div>
@@ -224,15 +265,17 @@ const MusicPlayer = ({ startPlaying }) => {
                     <div className="flex items-center gap-2 shrink-0">
                         <button
                             onClick={togglePlay}
-                            className="w-10 h-10 flex items-center justify-center bg-white text-slate-950 rounded-full hover:scale-110 hover:bg-indigo-50 transition-all duration-300 shadow-lg shadow-white/10"
+                            className="w-11 h-11 flex items-center justify-center bg-gradient-to-br from-yellow-300 to-amber-400 text-slate-950 font-black rounded-full shadow-clay-yellow active:scale-95 transition-all"
+                            title={isPlaying ? "Pausar" : "Reproducir"}
                         >
                             {isPlaying ? <Pause size={16} fill="currentColor" /> : <Play size={16} fill="currentColor" className="ml-0.5" />}
                         </button>
                         <button
                             onClick={playNext}
-                            className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white hover:bg-white/10 rounded-full transition-all duration-300"
+                            className="w-10 h-10 flex items-center justify-center bg-slate-800/90 hover:bg-slate-700 text-white rounded-full shadow-clay-btn active:scale-95 transition-all"
+                            title="Siguiente canción"
                         >
-                            <SkipForward size={20} />
+                            <SkipForward size={18} />
                         </button>
                     </div>
                 </div>

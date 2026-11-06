@@ -135,23 +135,13 @@ const PhotoGallery = () => {
           </button>
         </div>
 
-        <div className="flex items-center gap-2.5 w-full sm:w-auto">
-          <button
-            onClick={handleRefresh}
-            className="flex-1 sm:flex-initial px-5 py-2.5 bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white font-black text-xs rounded-full shadow-clay-btn active:scale-95 transition-all flex items-center justify-center gap-2 border border-white/10"
-            title="Mezclar y cargar otros recuerdos"
-          >
-            <RefreshCw size={14} /> Aleatorio ({displayedItems.length})
-          </button>
-
-          <button
-            onClick={() => triggerBirthdayBlast()}
-            className="px-3 py-2.5 bg-pink-500/20 hover:bg-pink-500 text-pink-400 hover:text-white font-black text-xs rounded-full shadow-clay-btn active:scale-95 transition-all flex items-center justify-center gap-1 border border-pink-500/30"
-            title="Lanzar confeti de celebración"
-          >
-            <PartyPopper size={14} />
-          </button>
-        </div>
+        <button
+          onClick={handleRefresh}
+          className="w-full sm:w-auto px-5 py-2.5 bg-slate-800/90 hover:bg-slate-700 text-slate-200 hover:text-white font-black text-xs rounded-full shadow-clay-btn active:scale-95 transition-all flex items-center justify-center gap-2 border border-white/10"
+          title="Mezclar y cargar otros recuerdos"
+        >
+          <RefreshCw size={14} /> Aleatorio ({displayedItems.length})
+        </button>
       </div>
 
       {/* Grid Masonry Claymorphic */}

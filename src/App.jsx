@@ -15,6 +15,7 @@ import BackgroundTheme from './components/BackgroundTheme';
 import MusicPlayer from './components/MusicPlayer';
 import TriviaPlayer from './components/TriviaPlayer';
 import TriviaStudio from './components/TriviaStudio';
+import SaudiAvatarClay from './components/SaudiAvatarClay';
 import { signInAnonymously } from "firebase/auth";
 import { auth, isConfigured } from "./firebase";
 import { triggerBirthdayBlast, triggerAnimeVictory } from './utils/confetti';
@@ -219,21 +220,15 @@ function App() {
         {/* Header Claymorphism Flotante Fijo y Estático al Scroll */}
         <header className="fixed top-2 sm:top-4 left-0 right-0 z-40 max-w-5xl mx-auto px-3 sm:px-6 pointer-events-none">
           <div className={`pointer-events-auto bg-slate-900/90 backdrop-blur-2xl border border-white/15 rounded-full px-3.5 sm:px-6 h-16 sm:h-18 flex items-center justify-between shadow-clay-header transition-all duration-300 ${isScrolled ? 'bg-slate-900/95 border-white/25 shadow-clay-card scale-[0.99]' : ''}`}>
-            {/* Logo Saudí Claymorphic */}
+            {/* Avatar Claymorphic de Saudí y Saludo de Cumpleaños Emotivo */}
             <div 
               onClick={() => setActiveTab('gallery')}
-              className="flex items-center gap-3 cursor-pointer group select-none"
+              className="flex items-center gap-2.5 sm:gap-3 cursor-pointer group select-none"
             >
-              <div className="w-10 h-10 sm:w-11 sm:h-11 bg-gradient-to-br from-pink-400 to-indigo-600 rounded-2xl flex items-center justify-center shadow-clay-pink group-hover:scale-105 active:scale-95 transition-all shrink-0">
-                <span className="font-black text-white text-lg tracking-wider">S</span>
-              </div>
-              <div className="flex flex-col">
-                <span className="font-black text-sm sm:text-base tracking-tight text-white leading-tight">
-                  HBD Saudí
-                </span>
-                <span className="text-[10px] font-mono font-bold text-pink-400 uppercase tracking-widest flex items-center gap-1">
-                  <span>Claymorphism 2026</span>
-                  <span className="w-1.5 h-1.5 rounded-full bg-yellow-400 animate-ping inline-block"></span>
+              <SaudiAvatarClay size={46} className="sm:w-[48px] sm:h-[48px]" />
+              <div className="flex flex-col justify-center">
+                <span className="font-['Pacifico',cursive] text-lg sm:text-2xl tracking-wide text-transparent bg-clip-text bg-gradient-to-r from-pink-400 via-rose-300 to-amber-300 drop-shadow-sm group-hover:scale-[1.02] transition-transform origin-left leading-tight py-0.5">
+                  ¡Feliz Cumple Saudí!
                 </span>
               </div>
             </div>
